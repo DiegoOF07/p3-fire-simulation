@@ -1,0 +1,16 @@
+{
+  "name": "fire-sim",
+  "private": true,
+  "packageManager": "pnpm@11.21.0",
+  "scripts": {
+    "dev": "concurrently -k -n back,front -c red,cyan \"pnpm dev:back\" \"pnpm dev:front\"",
+    "dev:back": "uv run --directory backend uvicorn app.main:app --reload --port 8000",
+    "dev:front": "pnpm --filter frontend dev",
+    "test": "pnpm test:back && pnpm test:front",
+    "test:back": "uv run --directory backend pytest",
+    "test:front": "pnpm --filter frontend test"
+  },
+  "devDependencies": {
+    "concurrently": "^10.0.6"
+  }
+}
