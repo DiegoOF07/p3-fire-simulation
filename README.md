@@ -7,7 +7,7 @@ Simulador web de incendio forestal: el backend (Python) resuelve las ecuaciones 
 - [uv](https://docs.astral.sh/uv/) (instala Python 3.12 por su cuenta si hace falta)
 - Node.js 22+ y pnpm 11 (`npm i -g pnpm`)
 
-En WSL, usar el `pnpm` y `node` de Linux, no los de Windows (`which pnpm` no debe apuntar a `/mnt/c/...`).
+Instalar y correr siempre desde el mismo sistema (Windows o WSL/Linux). `node_modules` y `.venv` creados en uno no funcionan en el otro; si se cambia, borrar `node_modules`, `frontend/node_modules` y `backend/.venv` y reinstalar.
 
 ## Instalación
 
@@ -25,22 +25,20 @@ pnpm dev:front  # solo frontend
 pnpm test       # pruebas de backend y frontend
 ```
 
-Si el repo está bajo `/mnt/c` en WSL y Vite no recarga al guardar, usar `VITE_POLL=1 pnpm dev`.
+En WSL con el repo bajo `/mnt/c`, si Vite no recarga al guardar, usar `VITE_POLL=1 pnpm dev`.
 
 ## Estructura
 
 ```text
 backend/
-  app/contracts.py   # Scene, Simulation, parámetros, cuantización (P1)
-  app/protocol.py    # formato binario de cuadros y mensajes WebSocket (P1)
-  app/api/  app/mock/                # P1
-  app/solver/                        # P2
-  app/scenes/                        # P3
+  app/contracts.py   # Scene, Simulation, parámetros, cuantización
+  app/protocol.py    # formato binario de cuadros y mensajes WebSocket
+  app/api/  app/mock/                
+  app/solver/                        
+  app/scenes/                        
   analysis/  experiments/  tests/
 frontend/
-  src/core/          # cliente, decodificador, estado (P1)
-  src/metrics/       # gráficas en vivo (P1)
-  src/scene/ src/ui/ # escena 3D y panel (P3)
+  src/core/          # cliente, decodificador, estado
+  src/metrics/       # gráficas en vivo 
+  src/scene/ src/ui/ # escena 3D y panel
 ```
-
-`contracts.py`, `protocol.py` y `frontend/src/core/protocol.ts` solo los modifica la Persona 1, y los cambios se avisan antes de subirlos.
