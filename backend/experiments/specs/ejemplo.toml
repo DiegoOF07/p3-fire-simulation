@@ -1,0 +1,17 @@
+# Template: copy it, rename `name` and the file. A list in [scene] or [params]
+# is a sweep; every combination of lists becomes one run.
+name = "ejemplo"
+question = "¿Cómo cambia el área quemada con la velocidad de propagación?"
+
+[scene]
+preset = "flat"
+density = 1.0
+seed = [0, 1]
+
+[params]
+spread_speed = [0.5, 1.0, 2.0]
+
+[run]
+ignite = [[100, 100]]  # m, one or more points
+max_time = 60          # simulated seconds
+speed = 1              # 1, 5 or 20: solver steps per recorded row

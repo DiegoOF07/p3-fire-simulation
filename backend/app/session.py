@@ -86,9 +86,13 @@ class Session:
             cmd(self.sim)
 
     def advance(self) -> Rendered:
+        self.step()
+        return self.render()
+
+    def step(self) -> None:
+        """One frame of solver steps, without rendering (headless runs)."""
         self.sim.step(providers.BASE_STEPS * self.speed)
         self.frame += 1
-        return self.render()
 
     def render(self) -> Rendered:
         T, beta = self.sim.fields_uint8()
