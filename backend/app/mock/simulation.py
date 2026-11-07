@@ -111,3 +111,6 @@ class MockSimulation:
 
     def finished(self) -> bool:
         return bool(np.isfinite(self._arrival).all()) and not self._burning().any()
+
+
+create_simulation = MockSimulation

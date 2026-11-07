@@ -1,14 +1,23 @@
 from __future__ import annotations
 
-from app.contracts import BuildScene, SimFactory
-from app.mock import scenes as scene_impl
-from app.mock import simulation as sim_impl
+import importlib
+import os
+from typing import Callable
 
-# Swap these imports for app.solver / app.scenes when they're ready.
-list_presets = scene_impl.list_presets
-build_scene: BuildScene = scene_impl.build_scene
-param_specs = sim_impl.param_specs
-create_simulation: SimFactory = sim_impl.MockSimulation
+from app.contracts import BuildScene, ParamSpec, PresetInfo, SimFactory
+
+# Simulation module exposes: param_specs(), create_simulation(scene, params), optional BASE_STEPS.
+# Scenes module exposes: list_presets(), build_scene(preset, density, seed).
+SIM_MODULE = os.environ.get("FIRE_SIM_MODULE", "app.mock.simulation")
+SCENES_MODULE = os.environ.get("FIRE_SCENES_MODULE", "app.mock.scenes")
+
+_sim = importlib.import_module(SIM_MODULE)
+_scenes = importlib.import_module(SCENES_MODULE)
+
+list_presets: Callable[[], list[PresetInfo]] = _scenes.list_presets
+build_scene: BuildScene = _scenes.build_scene
+param_specs: Callable[[], list[ParamSpec]] = _sim.param_specs
+create_simulation: SimFactory = _sim.create_simulation
 
 # Solver steps per frame at ×1.
-BASE_STEPS = 1
+BASE_STEPS: int = getattr(_sim, "BASE_STEPS", 1)
