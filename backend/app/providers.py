@@ -9,3 +9,6 @@ list_presets = scene_impl.list_presets
 build_scene: BuildScene = scene_impl.build_scene
 param_specs = sim_impl.param_specs
 create_simulation: SimFactory = sim_impl.MockSimulation
+
+# Solver steps per frame at ×1.
+BASE_STEPS = 1

@@ -108,7 +108,7 @@ class Simulation(Protocol):
         ...
 
     def finished(self) -> bool:
-        """True when nothing is burning."""
+        """True once something was ignited and nothing is burning anymore."""
         ...
 
 
