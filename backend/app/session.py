@@ -1,11 +1,11 @@
 from __future__ import annotations
 
-import uuid
 from typing import Callable
 
 from app import providers
 from app.contracts import Metrics, ParamSpec, Scene, Simulation, default_params
 from app.protocol import SPEEDS, SimState, Speed, pack_frame
+from app.store import LRUStore, new_id
 
 IGNITION_RADIUS = 3.0  # m
 
@@ -33,7 +33,7 @@ class Session:
             if name not in specs:
                 raise ValueError(f"unknown param {name!r}")
             _checked(specs[name], value)
-        self.id = uuid.uuid4().hex[:12]
+        self.id = new_id()
         self.scene = scene
         self.params = default_params(list(specs.values())) | {k: float(v) for k, v in (params or {}).items()}
         self.sim: Simulation = providers.create_simulation(scene, dict(self.params))
@@ -101,4 +101,5 @@ class Session:
             self.state = "finished"
 
 
-sessions: dict[str, Session] = {}
+# Kept after the socket closes so their CSV can still be exported.
+sessions: LRUStore[Session] = LRUStore(32)

@@ -93,7 +93,7 @@ class Runner:
 async def _launch(ch: Channel, old: Runner | None, session: Session) -> Runner:
     if old:
         old.stop()
-    sessions[session.id] = session
+    sessions.put(session.id, session)
     await ch.json({"type": "session", "id": session.id})
     await ch.state(session)
     return Runner(ch, session)
