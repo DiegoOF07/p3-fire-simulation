@@ -1,5 +1,6 @@
-import type { SceneMeta } from './api'
-import type { Frame, Metrics, SimState, Speed } from './protocol'
+import type { SceneMeta, SceneRequest } from './api'
+import type { Frame, Metrics, ParamSpec, SimState, Speed } from './protocol'
+import type { Connection } from './socket'
 
 type Listener<T> = (state: T, prev: T) => void
 
@@ -27,10 +28,13 @@ export function createStore<T extends object>(initial: T): Store<T> {
 }
 
 export interface AppState {
+  connection: Connection
+  sceneRequest: SceneRequest | null
   scene: SceneMeta | null
   sessionId: string | null
   simState: SimState
   speed: Speed
+  paramSpecs: ParamSpec[]
   params: Record<string, number>
   frame: Frame | null
   metrics: Metrics | null
@@ -38,10 +42,13 @@ export interface AppState {
 }
 
 export const appState = createStore<AppState>({
+  connection: 'connecting',
+  sceneRequest: null,
   scene: null,
   sessionId: null,
   simState: 'idle',
   speed: 1,
+  paramSpecs: [],
   params: {},
   frame: null,
   metrics: null,

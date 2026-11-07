@@ -1,5 +1,11 @@
 import type { ParamSpec, PresetInfo } from './protocol'
 
+export interface SceneRequest {
+  preset: string
+  density: number
+  seed: number
+}
+
 export interface SceneMeta {
   id: string
   nx: number
@@ -20,12 +26,22 @@ const f32 = async (path: string) => new Float32Array(await (await request(path))
 export const getParams = () => json<ParamSpec[]>('/api/params')
 export const getPresets = () => json<PresetInfo[]>('/api/scenes')
 
-export const buildScene = (preset: string, density = 1, seed = 0) =>
+export const buildScene = (req: SceneRequest) =>
   json<SceneMeta>('/api/scenes/build', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ preset, density, seed }),
+    body: JSON.stringify(req),
   })
+
+/** null when the server no longer has the scene (e.g. it restarted). */
+export async function findScene(id: string): Promise<SceneMeta | null> {
+  const res = await fetch(`/api/scenes/${id}`)
+  if (res.status === 404) return null
+  if (!res.ok) throw new Error(`GET /api/scenes/${id} -> ${res.status}`)
+  return res.json()
+}
+
+export const exportUrl = (sessionId: string) => `/api/sessions/${sessionId}/export.csv`
 
 // (ny * nx) heights, row-major
 export const getHeightmap = (id: string) => f32(`/api/scenes/${id}/heightmap`)
