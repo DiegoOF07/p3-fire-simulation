@@ -27,6 +27,31 @@ pnpm test       # pruebas de backend y frontend
 
 En WSL con el repo bajo `/mnt/c`, si Vite no recarga al guardar, usar `VITE_POLL=1 pnpm dev`.
 
+## Implementaciones
+
+Por defecto se usan la simulación y las escenas falsas (`app/mock`). Para usar otras sin tocar código:
+
+```powershell
+$env:FIRE_SIM_MODULE = "app.solver"      # PowerShell; en bash: export FIRE_SIM_MODULE=app.solver
+$env:FIRE_SCENES_MODULE = "app.scenes"
+pnpm test:back   # tests/test_api_contract.py verifica que cumplan el contrato
+pnpm dev
+```
+
+## Experimentos
+
+Cada experimento es un `.toml` en `backend/experiments/specs/` (ver `ejemplo.toml`). Una lista en `[scene]` o `[params]` es un barrido; cada combinación es una corrida.
+
+```bash
+pnpm experiments                                  # todos los specs
+pnpm experiments experiments/specs/ejemplo.toml   # uno (ruta relativa a backend/)
+pnpm experiments --jobs 4                         # en paralelo
+pnpm experiments --dry-run                        # validar y listar corridas
+pnpm bench                                        # costo por cuadro según malla y velocidad
+```
+
+Los resultados quedan en `backend/experiments/results/`: un CSV por corrida, `summary.csv` por experimento, y `summary.csv` y `summary.md` con todos los experimentos.
+
 ## Estructura
 
 ```text

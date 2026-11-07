@@ -8,7 +8,9 @@
     "dev:front": "pnpm --filter frontend dev",
     "test": "pnpm test:back && pnpm test:front",
     "test:back": "uv run --directory backend pytest",
-    "test:front": "pnpm --filter frontend test"
+    "test:front": "pnpm --filter frontend test",
+    "experiments": "uv run --directory backend python -m experiments.run",
+    "bench": "uv run --directory backend python -m experiments.bench"
   },
   "devDependencies": {
     "concurrently": "^10.0.6"
