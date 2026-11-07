@@ -14,6 +14,7 @@ export class FlatView {
   private controls: OrbitControls
   private texture: THREE.DataTexture
   private pixels: Uint8Array<ArrayBuffer>
+  private resizer: ResizeObserver
 
   constructor(container: HTMLElement, nx: number, ny: number, cellSize: number) {
     const width = nx * cellSize
@@ -22,6 +23,7 @@ export class FlatView {
     this.scene.background = new THREE.Color(0x111111)
 
     this.pixels = new Uint8Array(nx * ny * 4)
+    for (let i = 0; i < nx * ny; i++) this.pixels.set([...FUEL, 255], i * 4)
     this.texture = new THREE.DataTexture(this.pixels, nx, ny)
     this.texture.colorSpace = THREE.SRGBColorSpace
     this.texture.magFilter = THREE.LinearFilter
@@ -47,7 +49,8 @@ export class FlatView {
       this.camera.aspect = w / h
       this.camera.updateProjectionMatrix()
     }
-    new ResizeObserver(resize).observe(container)
+    this.resizer = new ResizeObserver(resize)
+    this.resizer.observe(container)
     resize()
     this.renderer.setAnimationLoop(() => {
       this.controls.update()
@@ -55,7 +58,23 @@ export class FlatView {
     })
   }
 
+  dispose(): void {
+    this.renderer.setAnimationLoop(null)
+    this.resizer.disconnect()
+    this.controls.dispose()
+    this.texture.dispose()
+    this.scene.traverse((o) => {
+      if (o instanceof THREE.Mesh) {
+        o.geometry.dispose()
+        o.material.dispose()
+      }
+    })
+    this.renderer.dispose()
+    this.renderer.domElement.remove()
+  }
+
   update(frame: Frame): void {
+    if (frame.T.length * 4 !== this.pixels.length) return
     const { T, beta } = frame
     const pixels = this.pixels
     for (let i = 0; i < T.length; i++) {
