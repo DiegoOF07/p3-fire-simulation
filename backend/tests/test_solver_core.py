@@ -14,7 +14,9 @@ def flat_scene(n: int = 120, trees: np.ndarray | None = None) -> Scene:
 
 
 def make_sim(scene: Scene, **overrides: float):
-    return create_simulation(scene, default_params(param_specs()) | overrides)
+    # Treeless test scenes get full ground fuel so the fire can spread.
+    params = default_params(param_specs()) | {"ground_fuel": 1.0} | overrides
+    return create_simulation(scene, params)
 
 
 def run_until(sim, t_end: float, chunk: int = 20) -> None:
@@ -28,7 +30,8 @@ def test_param_specs_are_valid():
     for s in specs:
         assert s["min"] <= s["default"] <= s["max"], s["name"]
     live = {s["name"]: s["live"] for s in specs}
-    assert live["T_inf"] is False and live["fuel"] is False
+    for name in ("T_inf", "ground_fuel", "tree_fuel", "moisture"):
+        assert live[name] is False, name
 
 
 def test_nothing_happens_without_ignition():
@@ -120,7 +123,7 @@ def test_fields_uint8_and_burning_after_ignition():
 
 
 def test_low_fuel_fire_dies_and_finishes():
-    sim = make_sim(flat_scene(80), fuel=0.5)
+    sim = make_sim(flat_scene(80), ground_fuel=0.5)
     assert not sim.finished()
     sim.ignite(40.0, 40.0, 3.0)
     assert not sim.finished()
@@ -131,7 +134,7 @@ def test_low_fuel_fire_dies_and_finishes():
 
 def test_full_burn_finishes_and_counts_trees():
     trees = np.array([[10.5, 10.5, 5, 1], [30.5, 30.5, 5, 1], [59.5, 0.5, 5, 1]], np.float32)
-    sim = make_sim(flat_scene(60, trees))
+    sim = make_sim(flat_scene(60, trees))  # ground_fuel=1: the whole plot burns
     sim.ignite(30.0, 30.0, 3.0)
     run_until(sim, 400.0)
     assert sim.finished()

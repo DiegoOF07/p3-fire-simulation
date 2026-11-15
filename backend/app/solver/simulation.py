@@ -12,16 +12,28 @@ from app.contracts import (
     quantize_beta,
     quantize_T,
 )
+from app.solver.fuel import initial_fuel, moisture_damping
 from app.solver.model import ignition_threshold, to_dimensionless, u_to_T
-from app.solver.numerics import Workspace, laplacian_neumann, reaction_rate, stable_dt
+from app.solver.numerics import (
+    Workspace,
+    advection_upwind,
+    laplacian_neumann,
+    reaction_rate,
+    stable_dt,
+)
 from app.solver.params import param_specs, to_physical
+from app.solver.wind import max_wind_speed, slope_velocity, wind_vector
 
 T_BURNING = T_U8_MIN + BURNING_T_U8 / 255 * (T_U8_MAX - T_U8_MIN)  # "burning" on screen
 BURNT_FRACTION = 0.5  # a cell counts as burned once half its fuel is gone
 
 
 class FireSimulation:
-    """Reaction-diffusion fire model on the scene grid, explicit finite differences."""
+    """Reaction-diffusion-advection fire model on the scene grid, explicit finite differences.
+
+    front_speed is the growth rate of the equivalent radius √(area/π): exact for a circle,
+    the mean spread rate (not the head speed) when wind or slope stretch the fire.
+    """
 
     def __init__(self, scene: Scene, params: dict[str, float]) -> None:
         self.scene = scene
@@ -32,8 +44,10 @@ class FireSimulation:
         ny, nx = scene.ny, scene.nx
         cs = scene.cell_size
         self.T = np.full((ny, nx), self.p.T_inf)
-        self.beta0 = np.full((ny, nx), self.params["fuel"])
+        self.beta0 = initial_fuel(scene, self.params["ground_fuel"], self.params["tree_fuel"])
         self.beta = self.beta0.copy()
+        self._grad_h = slope_velocity(scene.heightmap, cs, 1.0)  # ∇h, scaled by slope_factor
+        self._has_slope = bool(np.any(self._grad_h[0]) or np.any(self._grad_h[1]))
         self._ws = Workspace(ny, nx)
         self._cx = (np.arange(nx) + 0.5) * cs
         self._cy = (np.arange(ny) + 0.5) * cs
@@ -48,9 +62,20 @@ class FireSimulation:
         self._refresh_derived()
 
     def _refresh_derived(self) -> None:
-        self.dt = stable_dt(self.p, self.scene.cell_size, float(self.beta0.max(initial=0.0)))
-        d = to_dimensionless(self.p)
-        u_ig = ignition_threshold(d.a, d.b, self.params["fuel"]) if self.params["fuel"] > 0 else None
+        self.A_eff = self.p.A * moisture_damping(self.params["moisture"])
+        gamma = self.params["slope_factor"]
+        self._slope_vx = gamma * self._grad_h[0]
+        self._slope_vy = gamma * self._grad_h[1]
+        wind_max = max_wind_speed(self.params)
+        beta_max = float(self.beta0.max(initial=0.0))
+        self.dt = stable_dt(
+            self.p, self.scene.cell_size, beta_max,
+            wind_max + float(np.abs(self._slope_vx).max(initial=0.0)),
+            wind_max + float(np.abs(self._slope_vy).max(initial=0.0)),
+            self.A_eff,
+        )
+        d = to_dimensionless(self.p.with_(A=self.A_eff))
+        u_ig = ignition_threshold(d.a, d.b, beta_max) if beta_max > 0 and self.A_eff > 0 else None
         T_ig = float(u_to_T(u_ig, self.p)) if u_ig is not None else T_BURNING
         # Below this nothing can reignite, so the fire is over.
         self._T_quiet = self.p.T_inf + 0.5 * (min(T_ig, T_BURNING) - self.p.T_inf)
@@ -68,24 +93,33 @@ class FireSimulation:
         self.ignited = True
 
     def step(self, n_steps: int) -> None:
-        p, dt, ws = self.p, self.dt, self._ws
+        p, dt, ws, A = self.p, self.dt, self._ws, self.A_eff
         T, beta = self.T, self.beta
         dx = self.scene.cell_size
         for _ in range(n_steps):
             lap = laplacian_neumann(T, dx, ws)
+            wx, wy = wind_vector(self.params, self.t)
+            vx: float | np.ndarray = wx
+            vy: float | np.ndarray = wy
+            if self._has_slope:
+                vx = np.add(self._slope_vx, wx, out=ws.vx)
+                vy = np.add(self._slope_vy, wy, out=ws.vy)
+            moving = self._has_slope or wx != 0.0 or wy != 0.0
             r = reaction_rate(T, p, ws)
             r *= beta  # β·r, used by both equations
             tmp = ws.tmp
             np.subtract(T, p.T_inf, out=tmp)
             tmp *= -p.C
             tmp += p.kappa * lap
-            tmp += p.A * r
+            tmp += A * r
+            if moving:
+                tmp -= advection_upwind(T, vx, vy, dx, ws)
             tmp *= dt
             T += tmp
             r *= dt * p.eps
             beta -= r
             np.maximum(beta, 0.0, out=beta)
-        self.t += n_steps * dt
+            self.t += dt
         if not np.isfinite(T).all():
             raise FloatingPointError("NaN in T")
         self._update_front_speed()
