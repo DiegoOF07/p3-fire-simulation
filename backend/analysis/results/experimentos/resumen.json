@@ -1,0 +1,79 @@
+{
+  "critical_density": 0.8254262170293488,
+  "moisture_extinction": {
+    "1": 0.07,
+    "1.5": 0.1
+  },
+  "wind_head_speed": [
+    {
+      "mode": "despreciable",
+      "U": 0.0,
+      "head_m_s": 0.42111692749947777
+    },
+    {
+      "mode": "constante",
+      "U": 2.0,
+      "head_m_s": 0.6085592185592094
+    },
+    {
+      "mode": "constante",
+      "U": 5.0,
+      "head_m_s": 0.8039314516128984
+    },
+    {
+      "mode": "constante",
+      "U": 10.0,
+      "head_m_s": 1.1322344322344164
+    },
+    {
+      "mode": "variable",
+      "U": 2.0,
+      "head_m_s": 0.6028719211822651
+    },
+    {
+      "mode": "variable",
+      "U": 5.0,
+      "head_m_s": 0.7855462184873787
+    },
+    {
+      "mode": "variable",
+      "U": 10.0,
+      "head_m_s": 1.081176686217022
+    }
+  ],
+  "slope_reach": [
+    {
+      "slope": 0.0,
+      "up_m": 31.5,
+      "down_m": 31.5
+    },
+    {
+      "slope": 0.1,
+      "up_m": 35.5,
+      "down_m": 28.5
+    },
+    {
+      "slope": 0.2,
+      "up_m": 38.5,
+      "down_m": 25.5
+    },
+    {
+      "slope": 0.3,
+      "up_m": 40.5,
+      "down_m": 22.5
+    },
+    {
+      "slope": 0.5,
+      "up_m": 49.5,
+      "down_m": 7.5
+    }
+  ],
+  "critical_width_m": {
+    "cortafuegos_0": 6,
+    "cortafuegos_5": 16,
+    "cortafuegos_10": null,
+    "río_0": 2,
+    "río_5": 6,
+    "río_10": 10
+  }
+}
