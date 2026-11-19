@@ -7,6 +7,7 @@ import { FireEffects } from './effects'
 import { viewOptions } from './options'
 import { Terrain } from './terrain'
 import { Trees } from './trees'
+import { Water, WATER_PRESETS } from './water'
 import { WindArrows, windAt } from './wind'
 
 const CLICK_TOLERANCE = 5 // px; more movement is an orbit drag, not a click
@@ -17,6 +18,7 @@ interface Loaded {
   trees: Trees
   wind: WindArrows
   effects: FireEffects
+  water: Water | null
   markers: THREE.Group
 }
 
@@ -55,16 +57,21 @@ export function mountScene(container: HTMLElement, sim: SimController): void {
     const wind = new WindArrows(terrain.width, terrain.depth, terrain.maxHeight + 18)
     const effects = new FireEffects(terrain)
     const markers = new THREE.Group()
+    const preset = appState.get().sceneRequest?.preset ?? ''
+    const water = WATER_PRESETS.has(preset) ? new Water(heights, terrain) : null
     scene.add(terrain.mesh, trees.group, wind.group, effects.group, markers)
-    current = { id: meta.id, terrain, trees, wind, effects, markers }
+    if (water?.mesh) scene.add(water.mesh)
+    current = { id: meta.id, terrain, trees, wind, effects, water, markers }
     frameCamera(terrain)
     updateWind(appState.get())
   }
 
   function unload() {
     if (!current) return
-    const { terrain, trees, wind, effects, markers } = current
+    const { terrain, trees, wind, effects, water, markers } = current
     scene.remove(terrain.mesh, trees.group, wind.group, effects.group, markers)
+    if (water?.mesh) scene.remove(water.mesh)
+    water?.dispose()
     terrain.dispose()
     trees.dispose()
     wind.dispose()
@@ -196,6 +203,7 @@ export function mountScene(container: HTMLElement, sim: SimController): void {
     if (current) {
       current.trees.animate(clock.elapsedTime)
       const s = appState.get()
+      current.water?.animate(clock.elapsedTime, windAt(s.params, s.frame?.t ?? 0))
       if (viewOptions.get().effects && s.simState !== 'idle') {
         current.effects.animate(s.simState === 'running' ? dt : dt * 0.3, windAt(s.params, s.frame?.t ?? 0))
       }

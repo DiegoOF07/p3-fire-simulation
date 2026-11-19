@@ -17,6 +17,7 @@ SIZE = GRID * CELL_SIZE
 FIREBREAK_WIDTH = 8.0
 FIREBREAK_VARIANTS = (2, 4, 6, 8, 12, 16, 24, 32)  # m, for the critical-width experiment
 RIVER_WIDTH = 6.0
+RIVER_DEPTH = 1.5  # m
 SLOPE = 0.25  # river_slope: 25 % grade rising along +y
 
 Builder = Callable[[np.random.Generator, float], tuple[np.ndarray, ClearanceFn | None]]
@@ -53,8 +54,8 @@ def _river_slope(rng, density):
     x, y = grid_coords(GRID, CELL_SIZE)
     phase = rng.uniform(0, 2 * np.pi)
     dist = np.abs(y - _river_center(x, phase))
-    # Shallow channel carved into the slope.
-    channel = 1.2 * np.clip(1 - dist / (RIVER_WIDTH / 2 + 2), 0, 1)
+    # Flat-bottomed channel carved into the slope; the frontend finds the water from it.
+    channel = RIVER_DEPTH * np.clip((RIVER_WIDTH / 2 + 2 - dist) / 2, 0, 1)
     h = SLOPE * y - channel + 0.4 * smooth_noise(GRID, rng)
 
     def clearance(px, py):
