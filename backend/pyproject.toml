@@ -11,6 +11,8 @@ dependencies = [
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
+# Starlette suggests httpx2 for TestClient; httpx still works.
+filterwarnings = ["ignore:Using `httpx` with `starlette.testclient`"]
 
 [dependency-groups]
 dev = [
