@@ -8,8 +8,9 @@ from app.contracts import BuildScene, ParamSpec, PresetInfo, SimFactory
 
 # Simulation module exposes: param_specs(), create_simulation(scene, params), optional BASE_STEPS.
 # Scenes module exposes: list_presets(), build_scene(preset, density, seed).
-SIM_MODULE = os.environ.get("FIRE_SIM_MODULE", "app.mock.simulation")
-SCENES_MODULE = os.environ.get("FIRE_SCENES_MODULE", "app.mock.scenes")
+# Set them to app.mock.simulation / app.mock.scenes to run without the real solver.
+SIM_MODULE = os.environ.get("FIRE_SIM_MODULE", "app.solver")
+SCENES_MODULE = os.environ.get("FIRE_SCENES_MODULE", "app.scenes")
 
 _sim = importlib.import_module(SIM_MODULE)
 _scenes = importlib.import_module(SCENES_MODULE)
