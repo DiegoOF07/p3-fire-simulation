@@ -27,16 +27,19 @@ pnpm test       # pruebas de backend y frontend
 
 En WSL con el repo bajo `/mnt/c`, si Vite no recarga al guardar, usar `VITE_POLL=1 pnpm dev`.
 
+En la interfaz: elegir escenario, densidad y semilla en **Escena**, ajustar parámetros y hacer clic sobre el terreno para encender un foco (si la simulación no ha iniciado, el clic la inicia). Los parámetros de combustible y humedad solo cambian antes de iniciar. **Vista** activa isócronas, brasas y humo, y flechas de viento.
+
 ## Implementaciones
 
-Por defecto se usan la simulación y las escenas falsas (`app/mock`). Para usar otras sin tocar código:
+Por defecto se usan el solver (`app/solver`) y las escenas (`app/scenes`). Para correr con la simulación y la escena falsas, o probar otra implementación, sin tocar código:
 
 ```powershell
-$env:FIRE_SIM_MODULE = "app.solver"      # PowerShell; en bash: export FIRE_SIM_MODULE=app.solver
-$env:FIRE_SCENES_MODULE = "app.scenes"
-pnpm test:back   # tests/test_api_contract.py verifica que cumplan el contrato
+$env:FIRE_SIM_MODULE = "app.mock.simulation"   # PowerShell; en bash: export FIRE_SIM_MODULE=...
+$env:FIRE_SCENES_MODULE = "app.mock.scenes"
 pnpm dev
 ```
+
+`tests/test_api_contract.py` y `tests/test_api_integration.py` verifican la implementación activa contra el contrato y de punta a punta.
 
 ## Experimentos
 
@@ -58,12 +61,16 @@ Los resultados quedan en `backend/experiments/results/`: un CSV por corrida, `su
 backend/
   app/contracts.py   # Scene, Simulation, parámetros, cuantización
   app/protocol.py    # formato binario de cuadros y mensajes WebSocket
-  app/api/  app/mock/                
-  app/solver/                        
-  app/scenes/                        
-  analysis/  experiments/  tests/
+  app/api/           # REST y WebSocket
+  app/session.py     # sesión: pausa, velocidad, hilo del solver
+  app/mock/          # simulación y escena falsas
+  app/solver/        # modelo y métodos numéricos
+  app/scenes/        # relieves, árboles y escenarios
+  analysis/          # notebooks de validación y experimentos
+  experiments/       # corridas sin interfaz y benchmark
+  tests/
 frontend/
   src/core/          # cliente, decodificador, estado
-  src/metrics/       # gráficas en vivo 
+  src/metrics/       # gráficas en vivo
   src/scene/ src/ui/ # escena 3D y panel
 ```
