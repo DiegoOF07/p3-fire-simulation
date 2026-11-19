@@ -7,6 +7,9 @@
     <style>
       html, body { margin: 0; height: 100%; background: #111; color: #eee; font-family: system-ui, sans-serif; }
       #app { width: 100%; height: 100%; }
+      #panel { position: fixed; top: 12px; left: 12px; max-height: calc(100% - 60px); overflow-y: auto; }
+      #panel .lil-gui.root { --width: 300px; }
+      .panel-hint { padding: 4px 8px 6px; font-size: 11px; line-height: 1.35; color: #a9a89f; }
       #status { position: fixed; left: 12px; bottom: 12px; font-size: 13px; color: #c3c2b7; }
       .metrics-panel {
         position: fixed; top: 12px; right: 12px; padding: 12px 12px 4px;
@@ -21,6 +24,7 @@
   </head>
   <body>
     <div id="app"></div>
+    <div id="panel"></div>
     <div id="metrics"></div>
     <div id="status"></div>
     <script type="module" src="/src/main.ts"></script>
